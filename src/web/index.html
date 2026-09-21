@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>深海投放校正台</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>深海投放校正台</h1>
+        <p>CTD cast 分段、传感器延时、热质量修正与上下行共同压力层复核</p>
+      </div>
+      <div class="header-actions">
+        <button id="resetDb" type="button">清空并重导入 fixture</button>
+        <a id="exportLogs" href="/api/logs/export">导出运行记录</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel controls-panel">
+        <h2>校正参数</h2>
+        <label>方案名称 <input id="scenarioName" value="operator-review" /></label>
+        <label>调整的传感器
+          <select id="delaySensor">
+            <option value="temperatureDelaySec">温度传感器</option>
+            <option value="conductivityDelaySec">电导率传感器</option>
+          </select>
+        </label>
+        <label>传感器延时（秒）<input id="delayValue" type="range" min="-10" max="10" step="0.5" value="4" /><output id="delayOutput">4 s</output></label>
+        <label>温度延时（只读对照）<output id="temperatureDelayOutput"></output></label>
+        <label>电导率延时（只读对照）<output id="conductivityDelayOutput"></output></label>
+
+        <fieldset>
+          <legend>注水段（秒，左闭右开）</legend>
+          <label>开始 <input id="waterStart" type="number" min="0" max="270" step="1" value="30" /></label>
+          <label>结束 <input id="waterEnd" type="number" min="0" max="270" step="1" value="240" /></label>
+        </fieldset>
+        <label><input id="excludePumpOff" type="checkbox" checked /> 排除泵未启动样本</label>
+
+        <details>
+          <summary>热质量参数</summary>
+          <label>alpha <input id="thermalAlpha" type="number" min="0" max="0.2" step="0.001" value="0.03" /></label>
+          <label>tau（秒） <input id="thermalTauSec" type="number" min="1" max="60" step="1" value="8" /></label>
+          <label>gain <input id="thermalGain" type="number" min="0" max="10" step="0.1" value="1" /></label>
+        </details>
+
+        <div class="button-row">
+          <button id="preview" type="button">预览校正</button>
+          <button id="saveScenario" class="primary" type="button">保存方案与顺序</button>
+        </div>
+        <p id="statusMessage" class="status"></p>
+      </section>
+
+      <section class="panel chart-panel">
+        <div class="chart-toolbar">
+          <div class="segmented" role="group" aria-label="横轴">
+            <button class="axis-option active" data-axis="time" type="button">时间轴</button>
+            <button class="axis-option" data-axis="pressure" type="button">压力轴</button>
+          </div>
+          <select id="channelSelect">
+            <option value="temperature">温度 °C</option>
+            <option value="conductivity">电导率 S/m</option>
+            <option value="salinity" selected>盐度 PSU</option>
+            <option value="pressure">压力 dbar</option>
+          </select>
+          <span id="runSummary"></span>
+        </div>
+        <canvas id="castChart" width="1100" height="520"></canvas>
+        <div id="tooltip" class="tooltip hidden"></div>
+        <div class="legend">
+          <span><i class="raw"></i>原始通道</span>
+          <span><i class="corrected"></i>修正通道</span>
+          <span><i class="down"></i>下行</span>
+          <span><i class="up"></i>上行</span>
+          <span><i class="pump"></i>泵停/坏帧/非物理诊断</span>
+        </div>
+      </section>
+
+      <section class="panel metrics-panel">
+        <h2>共同压力层差异</h2>
+        <div id="metrics"></div>
+        <div class="table-wrap"><table id="layerTable"></table></div>
+      </section>
+
+      <section class="panel scenario-panel">
+        <h2>方案生成顺序</h2>
+        <div class="table-wrap"><table id="scenarioTable"></table></div>
+        <h3>运行记录</h3>
+        <pre id="logs"></pre>
+      </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
